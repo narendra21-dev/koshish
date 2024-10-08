@@ -2,12 +2,12 @@ import { View, Text } from 'react-native'
 import React from 'react'
 
 
-const qna = () => {
+const Qna = () => {
     return (
         <View>
-            <Text>qna</Text>
+            <Text>Qna</Text>
         </View>
     )
 }
 
-export default qna
+export default Qna

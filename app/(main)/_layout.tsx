@@ -1,7 +1,9 @@
-import { View, Text, ScrollView, StatusBar } from 'react-native'
+import { View, Text, ScrollView, StatusBar, SafeAreaView } from 'react-native'
 import React from 'react'
-import { Stack, Tabs, useNavigation, } from 'expo-router'
+import { Navigator, Slot, Stack, Tabs, useNavigation, } from 'expo-router'
 import { FontAwesome } from '@expo/vector-icons'
+
+
 
 const MainStack = () => {
 
@@ -14,7 +16,12 @@ const MainStack = () => {
         //     <Stack.Screen name='dashborad' />
         // </Stack>
 
-        <Tabs screenOptions={{ tabBarActiveTintColor: '#12a1cc', headerShown: false, }}>
+
+
+        <Tabs screenOptions={{
+            tabBarActiveTintColor: '#12a1cc', headerShown: false,
+            tabBarStyle: { backgroundColor: '#28282B' },
+        }}>
             <Tabs.Screen
                 name="index"
                 options={{
@@ -37,9 +44,14 @@ const MainStack = () => {
                     tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
                 }}
             />
+            <Tabs.Screen
+                name="(dashborad)"
+                options={{
+                    title: 'New',
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                }}
+            />
         </Tabs>
-
-
     )
 }
 

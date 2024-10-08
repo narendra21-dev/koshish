@@ -1,26 +1,20 @@
 import React, { useEffect } from 'react';
 
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, SafeAreaView, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, SafeAreaView, ScrollView, Button } from 'react-native'
 
 
-import { Dimensions } from 'react-native';
+import { Dimensions, } from 'react-native';
 
 import { FontAwesome } from '@expo/vector-icons';
 
 
-// Google Authentication
-
-// import statusCodes along with GoogleSignin
-// import {
-//   GoogleSignin,
-//   isErrorWithCode,
-//   isSuccessResponse,
-//   statusCodes,
-// } from '@react-native-google-signin/google-signin';
-
-// import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-import { router, SplashScreen } from 'expo-router';
+import { Link, Redirect, router, SplashScreen } from 'expo-router';
 import MaskedView from '@react-native-masked-view/masked-view';
+
+import * as WebBrowser from 'expo-web-browser'
+import { ClerkLoaded, ClerkProvider, useAuth, useOAuth, useUser } from '@clerk/clerk-expo';
+import * as Linking from 'expo-linking'
+import { userInfo } from 'os';
 
 
 
@@ -28,134 +22,170 @@ import MaskedView from '@react-native-masked-view/masked-view';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
+var isLogin = false;
 
-// GoogleSignin.configure({
-//   webClientId: '1000520553015-o5j5fm6nui1ev3v9bid6qheea8d2cs70.apps.googleusercontent.com',
 
-// });
 
+
+
+
+// if (!isLoaded) {
+//   // Handle loading state however you like
+//   console.log("isLoaded -----    " + isLoaded)
+//   return <Redirect href={'/(dashborad)/unit4'} />
+// }
+
+
+
+export const useWarmUpBrowser = () => {
+
+
+  React.useEffect(() => {
+    // Warm up the android browser to improve UX
+    // https://docs.expo.dev/guides/authentication/#improving-user-experience
+
+    console.log("first")
+
+    console.log("isLogin_____" + isLogin)
+    void WebBrowser.warmUpAsync()
+    return () => {
+      void WebBrowser.coolDownAsync()
+    }
+  }, [])
+}
+
+
+WebBrowser.maybeCompleteAuthSession();
 
 const MyCardAction = () => {
 
-  // Somewhere in your code
+  const { isSignedIn, user, isLoaded } = useUser()
 
-  // const signInn = async () => {
-  //   try {
-  //     console.log("signin mehode");
-  //     // await GoogleSignin.hasPlayServices();
-  //     const response = await GoogleSignin.signIn();
-  //     const idToken = response.data?.idToken;
-  //     console.log(idToken);
-  //     const googleCreadentials = GoogleAuthProvider.credential(idToken);
-  //     await signInWithCredential(googleCreadentials);
-  //     if (isSuccessResponse(response)) {
-  //       // setState({ userInfo: response.data });
-  //     } else {
-  //       // sign in was cancelled by user
-  //     }
-  //   } catch (error) {
-  //     console.log("signin mehode2m error");
-  //     if (isErrorWithCode(error)) {
-  //       console.log('got error', error.message);
-  //       switch (error.code) {
-  //         case statusCodes.IN_PROGRESS:
-  //           // operation (eg. sign in) already in progress
-  //           break;
-  //         case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-  //           // Android only, play services not available or outdated
-  //           break;
-  //         default:
-  //         // some other error happened
-  //       }
-  //     } else {
-  //       // an error that's not related to google sign in occurred
-  //     }
-  //   }
-  // };
 
-  // Splash screen timer
-  useEffect(() => {
-    const prepare = async () => {
-      // keep splash screen visible
-      await SplashScreen.preventAutoHideAsync()
+  useWarmUpBrowser();
+  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' })
 
-      // pre-load your stuff
-      await new Promise(resolve => setTimeout(resolve, 5000))
+  const onPress = React.useCallback(async () => {
 
-      // hide splash screen
-      await SplashScreen.hideAsync()
+    console.log("onPress -----    " + onPress)
+    try {
+      console.log(" setup 1 startOAuthFlow -----    " + startOAuthFlow)
+      const { createdSessionId, signIn, signUp, setActive } = await startOAuthFlow({
+        redirectUrl: Linking.createURL('/(dashborad)', { scheme: 'myapp' }),
+      })
+
+      console.log(" setup 2 startOAuthFlow -----    " + startOAuthFlow + "isLogin ---- " + isLogin)
+      if (createdSessionId) {
+        isLogin = true;
+        console.log(" setup 1 createdSessionId -----    " + createdSessionId + "isLogin_______" + isLogin)
+        setActive!({ session: createdSessionId })
+        console.log(" setup 2 createdSessionId -----    " + createdSessionId + "isLogin_______" + isLogin)
+      } else {
+        // Use signIn or signUp for next steps such as MFA
+        console.log(" setup 3 else part -----    " + createdSessionId)
+        console.log(" setup 3 else part of signUp -----    " + signUp)
+        console.log(" setup 3 else part of signIn -----    " + signIn)
+
+        if (signIn) {
+          isLogin = true;
+          console.log(" setup 1 signIn to dashborad -----    " + signIn + "isLogin-----" + isLogin)
+          router.push('/(dashborad)');
+          console.log(" setup 2 signIn to dashborad -----    " + signIn)
+        }
+        else if (signUp) {
+          isLogin = true;
+          console.log(" setup 3 signUp to dashborad -----    " + signUp)
+          console.log(" setup 3 signUp to dashborad -----    " + signUp)
+          router.push('/(auth)/');
+        }
+      }
+    } catch (err) {
+      console.error('OAuth error', err)
     }
-    prepare()
   }, [])
+  const Tog = () => {
+    console.log("isSignedIn -----    " + user?.id)
+    if (user?.id) {
+      console.log("user?.id -----    " + user?.id)
+      router.push('/(dashborad)/unit4')
+    }
+  }
+
+
+
 
 
   return (
 
 
-
     <View style={styles.container1}>
-        <View style={styles.container2}>
+      <View style={styles.container2}>
 
-          <View>
-            <Image style={styles.card} source={require('../assets/images/splash.png')} />
-          </View>
-          <MaskedView
-            style={{
-              flex: 1, flexDirection: 'row', height: '100%',
-              marginTop: -100
-            }}
-            maskElement={
-              <View
+        <View>
+          <Image style={styles.card} source={require('../assets/images/splash.png')} />
+        </View>
+        <MaskedView
+          style={{
+            flex: 1, flexDirection: 'row', height: '100%',
+            marginTop: -100
+          }}
+          maskElement={
+            <View
+              style={{
+                // Transparent background because mask is based off alpha channel.
+                backgroundColor: 'transparent',
+                alignItems: 'center',
+              }}
+            >
+              <Text
                 style={{
-                  // Transparent background because mask is based off alpha channel.
-                  backgroundColor: 'transparent',
-                  alignItems: 'center',
+                  fontSize: 30,
+                  color: 'black',
+                  fontWeight: 'bold',
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 30,
-                    color: 'black',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  I Can Exploer {"\n"}
-                  I Can Fun
-                </Text>
-              </View>
-            }
-          >
-
-            {/* Shows behind the mask, you can put anything here, such as an image */}
-            <View style={{ flex: 1, height: '100%', backgroundColor: '#324376' }} />
-            <View style={{ flex: 1, height: '100%', backgroundColor: '#F5DD90' }} />
-            <View style={{ flex: 1, height: '100%', backgroundColor: '#F76C5E' }} />
-            <View style={{ flex: 1, height: '100%', backgroundColor: '#e1e1e1' }} />
-
-
-          </MaskedView>
-          <TouchableOpacity onPress={() => {
-            console.log("hello tuch");
-            // signInn()
-            router.push('/(main)/dashborad');
-          }}
-            style={{
-              alignSelf: 'center', marginVertical: 50
-            }}
-          >
-            <View pointerEvents='none' style={styles.button}>
-              <FontAwesome.Button
-                name="google"
-                backgroundColor='#28282B'
-                size={50}
-              >
-                Sign in with Google
-              </FontAwesome.Button>
+                I Can Exploer {"\n"}
+                I Can Fun
+              </Text>
             </View>
-          </TouchableOpacity>
+          }
+        >
 
-        </View>
+          {/* Shows behind the mask, you can put anything here, such as an image */}
+          <View style={{ flex: 1, height: '100%', backgroundColor: '#324376' }} />
+          <View style={{ flex: 1, height: '100%', backgroundColor: '#F5DD90' }} />
+          <View style={{ flex: 1, height: '100%', backgroundColor: '#F76C5E' }} />
+          <View style={{ flex: 1, height: '100%', backgroundColor: '#e1e1e1' }} />
+
+
+        </MaskedView>
+        <TouchableOpacity onPress={() => {
+          console.log("hello tuch");
+          onPress();
+          console.log("hello tuch 22");
+        }}
+          style={{
+            alignSelf: 'center', marginVertical: 50
+          }}
+        >
+          <View pointerEvents='none' style={styles.button}>
+            <FontAwesome.Button
+              name="google"
+              backgroundColor='#28282B'
+              size={50}
+            >
+              Sign in with Google
+            </FontAwesome.Button>
+          </View>
+        </TouchableOpacity>
+
+        <Text style={{ color: 'white' }} onPress={Tog}>
+          goto
+        </Text>
+      </View>
     </View>
+
+
   );
 };
 
@@ -208,7 +238,4 @@ const styles = StyleSheet.create({
 
 });
 
-// function setState(arg0: { userInfo: import("@react-native-google-signin/google-signin").User; }) {
-//   throw new Error('Function not implemented.');
-// }
 
